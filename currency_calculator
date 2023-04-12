@@ -1,0 +1,47 @@
+
+import sys
+import requests
+import dateutil.parser
+
+print("Currency Calculator!")
+
+try:
+    currency = sys.argv[1]
+except IndexError:
+    currency = input("Press currency: ")
+
+currency = currency.upper()
+
+try:
+    date_str = sys.argv[2]
+except IndexError:
+    date_str = input("Press date: ")
+
+try:
+    date = dateutil.parser.parse(date_str)
+except ValueError:
+    print("Wrong date format!")
+    sys.exit(1)
+
+url_date = date.strftime("%Y-%m-%d")
+
+url = f"http://api.nbp.pl/api/exchangerates/rates/a/{currency}/{url_date}/?format=json"
+
+response = requests.get(url)
+
+if response.status_code == 404:
+    print("No data!")
+    sys.exit(2)
+if not response.ok:
+    print("No server response!")
+    sys.exit(3)
+
+json = response.json()
+
+try:
+    rate = json["rates"][0]["mid"]
+except(ValueError, KeyError):
+    print("Invalid server response!")
+    sys.exit(4)
+
+print(f"1 {currency} = {rate} PLN on day {date.day}/{date.month}/{date.year}")
